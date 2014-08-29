@@ -1,1 +1,6 @@
 /build/
+
+*~
+#*#
+
+src/nachos/bin/nachos

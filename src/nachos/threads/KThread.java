@@ -1,6 +1,8 @@
 package nachos.threads;
 
 import nachos.machine.*;
+import java.util.List;
+import java.util.LinkedList;
 
 /**
  * A KThread is a thread that can be used to execute Nachos kernel code. Nachos
@@ -194,12 +196,11 @@ public class KThread {
 	currentThread.status = statusFinished;
 
 	// notify any threads blocked by this one that this thread is finished
-	if(currentThread.isBlocking())
+	List<KThread> bThreads = currentThread.getBlockedThreads();
+	while(!bThreads.isEmpty())
 	{
-	  currentThread.setBlocking(false);
-	  currentThread.getBlockingThread().ready();
-	  currentThread.setBlockingThread(null);
-	}// if
+	  bThreads.remove(0).ready();
+	}// while
 
 	sleep();
     }
@@ -290,10 +291,8 @@ public class KThread {
 	  return;
 	} 
 
-	this.isBlocking = true;
-	
-	// get the thread that this thread is blocking
-	this.blockingThread = KThread.currentThread();
+	// add the thread that this thread is blocking to the list
+	this.blockedThreads.add(KThread.currentThread());
 
 	//sleep the calling thread
 	boolean intStatus = Machine.interrupt().disable();
@@ -405,44 +404,14 @@ public class KThread {
     }
   
   /**
-   * Get whether or not this thread is blocking another one
+   * Get the list of threads that this thread is blocking
    *
-   * @returns true if this thread is blocking another one
+   * @returns the list of threads being blocked by this one
    */
-  public boolean isBlocking()
+  public List<KThread> getBlockedThreads()
   {
-    return this.isBlocking;
-  }// isBlocking
-
-  /**
-   * Get whether or not this thread is blocking another one
-   *
-   * @param isBlocking true if this thread is blocking another one
-   */
-  public void setBlocking(boolean isBlocking)
-  {
-    this.isBlocking = isBlocking;
-  }// setBlocking
-
-  /**
-   * Get the thread that this thread is blocking
-   *
-   * @returns the thread being blocked by this one or null if this thread isn't doing any blocking
-   */
-  public KThread getBlockingThread()
-  {
-    return this.blockingThread;
-  }// getBlockingThread
-
-  /**
-   * Set the thread that this thread is blocking
-   *
-   * @param blockingThread the thread that this one is blocking, or null if it isn't blocking another thread
-   */
-  public void setBlockingThread(KThread blockingThread)
-  {
-    this.blockingThread = blockingThread;
-  }// setBlockingThread
+    return this.blockedThreads;
+  }// getBlockedThreads
 
     private static class PingTest implements Runnable {
 	PingTest(int which) {
@@ -555,8 +524,7 @@ public class KThread {
     private static KThread idleThread = null;
 
   /**
-   * Info about threads that this thread may be blocking.
+   * Queue of threads that this thread is blocking.
    */
-  private KThread blockingThread = null;
-  private boolean isBlocking = false;
+  List<KThread> blockedThreads = new LinkedList<KThread>();
 }
