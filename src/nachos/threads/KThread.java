@@ -430,7 +430,7 @@ public class KThread {
     }
 
   /**
-   * Mimics the child_proc function from Dr. Barnes's's's thread_join.c
+   * Mimics the child_proc function from Dr. Barnes's's's thread_join3.c
    */
   private static class ChildThread implements Runnable
   {
@@ -457,27 +457,35 @@ public class KThread {
     }// run
   }// ChildThread
 
+  /**
+   * Mimics Dr. Barnes's's's thread_join3.c
+   */
+  public static void threadJoin3()
+  {
+    KThread[] thread = new KThread[10];
+    
+    for(int i = 0; i < 10; i++)
+    {
+      thread[i] = new KThread(new ChildThread(i));
+      thread[i].setName("Child " + i);
+      thread[i].fork();
+    }// for
+    
+    for(int i = 0; i < 10; i++)
+    {
+      thread[i].join();
+    }// for
+    
+    System.out.println("Parent exiting");
+  }// threadJoin3
+
     /**
      * Tests whether this module is working.
      */
     public static void selfTest() {
 	Lib.debug(dbgThread, "Enter KThread.selfTest");
-
-	KThread[] thread = new KThread[10];
-
-	for(int i = 0; i < 10; i++)
-	{
-	  thread[i] = new KThread(new ChildThread(i));
-	  thread[i].setName("Child " + i);
-	  thread[i].fork();
-	}// for
-
-	for(int i = 0; i < 10; i++)
-	{
-	  thread[i].join();
-	}// for
 	
-	System.out.println("Parent exiting");
+	KThread.threadJoin3();
 
 	/* old tests	
 	   new KThread(new PingTest(1)).setName("forked thread").fork();
@@ -526,5 +534,5 @@ public class KThread {
   /**
    * Queue of threads that this thread is blocking.
    */
-  List<KThread> blockedThreads = new LinkedList<KThread>();
+  private List<KThread> blockedThreads = new LinkedList<KThread>();
 }
