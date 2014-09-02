@@ -437,7 +437,7 @@ public class KThread {
     private int childNum;
     private int deltaVal;
 
-    public ChildThread(int childNum, int deltaVal)
+    public ChildThread(int childNum/*, int deltaVal*/)
     {
       super();
       this.childNum = childNum;
@@ -465,21 +465,22 @@ public class KThread {
   public static void threadJoin3()
   {
     KThread[] thread = new KThread[10];
-    int delta = 0;
-    
+    //int delta = 0;
     for(int i = 0; i < 10; i++)
     {
-      thread[i] = new KThread(new ChildThread(i, delta-1));
+      thread[i] = new KThread(new ChildThread(i/*, delta-1*/));
       thread[i].setName("Child " + i);
       thread[i].fork();
-      delta++;
+      thread[i].join();
+      //delta++;
     }// for
     
-    for(int i = 0; i < 10; i++)
+    //Loop below seems redundant
+   /* for(int i = 0; i < 10; i++)
     {
       thread[i].join();
-    }// for
-    
+    }for
+    */
     System.out.println("Parent exiting");
   }// threadJoin3
 
