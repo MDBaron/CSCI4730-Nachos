@@ -435,11 +435,13 @@ public class KThread {
   private static class ChildThread implements Runnable
   {
     private int childNum;
+    private int deltaVal;
 
-    public ChildThread(int childNum)
+    public ChildThread(int childNum, int deltaVal)
     {
       super();
       this.childNum = childNum;
+      this.deltaVal = deltaVal;
     }// ctor
 
     public void run()
@@ -447,7 +449,7 @@ public class KThread {
       try
       {
 	System.out.println("Child " + this.childNum + " running");
-	java.util.concurrent.TimeUnit.SECONDS.sleep(this.childNum);
+	java.util.concurrent.TimeUnit.SECONDS.sleep(this.childNum-deltaVal);
 	System.out.println("Child " + this.childNum + " exiting");
       }// try
       catch(InterruptedException e)
@@ -463,12 +465,14 @@ public class KThread {
   public static void threadJoin3()
   {
     KThread[] thread = new KThread[10];
+    int delta = 0;
     
     for(int i = 0; i < 10; i++)
     {
-      thread[i] = new KThread(new ChildThread(i));
+      thread[i] = new KThread(new ChildThread(i, delta-1));
       thread[i].setName("Child " + i);
       thread[i].fork();
+      delta++;
     }// for
     
     for(int i = 0; i < 10; i++)
