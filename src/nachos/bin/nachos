@@ -5,11 +5,10 @@
 # disables character echo. Restores original terminal state on exit.
 
 onexit () {
-  stty $OLDSTTYSTATE
+ stty $OLDSTTYSTATE
 }
 
 OLDSTTYSTATE=`stty -g`
 trap onexit 0
 stty -icanon min 1 -echo
 java nachos.machine.Machine $*
-
