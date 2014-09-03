@@ -471,16 +471,14 @@ public class KThread {
       thread[i] = new KThread(new ChildThread(i/*, delta-1*/));
       thread[i].setName("Child " + i);
       thread[i].fork();
-      thread[i].join();
       //delta++;
     }// for
     
-    //Loop below seems redundant
-   /* for(int i = 0; i < 10; i++)
+   for(int i = 0; i < 10; i++)
     {
       thread[i].join();
-    }for
-    */
+    }//for
+    
     System.out.println("Parent exiting");
   }// threadJoin3
 
