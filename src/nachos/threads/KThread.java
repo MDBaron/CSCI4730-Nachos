@@ -447,7 +447,7 @@ public class KThread {
       try
       {
 	System.out.println("Child " + this.childNum + " running");
-	java.util.concurrent.TimeUnit.SECONDS.sleep(this.childNum);
+	Thread.sleep(this.childNum * 1000);
 	System.out.println("Child " + this.childNum + " exiting");
       }// try
       catch(InterruptedException e)
