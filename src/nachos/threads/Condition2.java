@@ -38,7 +38,8 @@ public class Condition2 {
 	boolean intStatus = Machine.interrupt().disable();
 	conditionLock.release();
 
-	waitQueue.addLast(KThread.currentThread());
+	// block current thread by adding to wait list then sleeping it
+	waitQueue.waitForAccess(KThread.currentThread());
 	KThread.sleep();
 
 	conditionLock.acquire();
@@ -54,9 +55,11 @@ public class Condition2 {
 
 	boolean intStatus = Machine.interrupt().disable();
 
-	if(!waitQueue.isEmpty())
+	// wake next thread in wait list
+	KThread threadToWake = waitQueue.nextThread();
+	if(threadToWake != null)
 	{
-	  waitQueue.removeFirst().ready();
+	  threadToWake.ready();
 	}// while
 
 	Machine.interrupt().restore(intStatus);
@@ -71,14 +74,19 @@ public class Condition2 {
 
 	boolean intStatus = Machine.interrupt().disable();
 
-	while(!waitQueue.isEmpty())
+	// iterate through wait queue and wake all sleeping threads
+	for(KThread threadToWake = waitQueue.nextThread();
+	    threadToWake != null;
+	    threadToWake = waitQueue.nextThread())
 	{
-	  waitQueue.removeFirst().ready();
-	}// while
+	  threadToWake.ready();
+	}// if
 
 	Machine.interrupt().restore(intStatus);
     }
 
     private Lock conditionLock;
-  private LinkedList<KThread> waitQueue = new LinkedList<KThread>();
+
+  // wait list that uses the system's scheduling philosophy
+  private ThreadQueue waitQueue = ThreadedKernel.scheduler.newThreadQueue(false);
 }
