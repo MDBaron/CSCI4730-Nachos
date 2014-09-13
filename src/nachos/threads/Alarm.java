@@ -2,11 +2,49 @@ package nachos.threads;
 
 import nachos.machine.*;
 
+import java.util.ArrayList;
+
 /**
  * Uses the hardware timer to provide preemption, and to allow threads to sleep
  * until a certain time.
  */
 public class Alarm {
+
+  // Entity class that represents a KThread that is waiting until a certain
+  // time to wake up
+  private class WaitingThread
+  {
+    KThread thread;
+    long wakeUpTime;
+
+    /**
+     * Create a new waiting thread container.
+     *
+     * @param thread the thread that is waiting
+     * @param wakeUpTime the system time at which the thread should wake
+     *
+     */
+    public WaitingThread(KThread thread, long wakeUpTime)
+    {
+      super();
+      this.thread = thread;
+      this.wakeUpTime = wakeUpTime;
+    }// ctor
+
+    public KThread getThread()
+    {
+      return this.thread;
+    }// getThread
+
+    public long getWakeUpTime()
+    {
+      return this.wakeUpTime;
+    }// getWakeUpTime
+  }// WaitingThread
+
+  // list of threads that have called Alarm.waitUntil()
+  private ArrayList<WaitingThread> waitingThreads = new ArrayList<WaitingThread>();
+
     /**
      * Allocate a new Alarm. Set the machine's timer interrupt handler to this
      * alarm's callback.
@@ -33,8 +71,22 @@ public class Alarm {
     	//TO-DO: Check for time delta to add sleeping thread to readyQueue. 
     	//TO-DO: if(elapsedTime >= necessarySleepTime){ pop thread from sleepingList? }
     	//TO-DO: This will need locks, due to multiple threads accessing
+
+      // iterate through list of waiting threads and wake the appropriate ones
+      for(int i = 0; i < waitingThreads.size(); i++)
+      {
+	if(waitingThreads.get(i).getWakeUpTime() <= Machine.timer().getTime())
+	{
+	  // lock this area down to prevent race conditions in the ArrayList
+	  boolean intStatus = Machine.interrupt().disable();
+
+	  waitingThreads.remove(i).getThread().ready();
+
+	  Machine.interrupt().restore(intStatus);
+	}// if
+      }// for
     	
-	KThread.currentThread().yield();
+      // KThread.currentThread().yield();
     }
 
     /**
@@ -59,29 +111,36 @@ public class Alarm {
     	 * Then shift to the ready queue of the timer interrupt handler(this must be altered as well) 
     	 * 
     	 */
-    
     	
     	//Re-use timer call from old method? Not sure how else to get the system time
-    	long wakeTime = Machine.timer().getTime() + x;
-    	
+      long wakeTime = Machine.timer().getTime() + x;
+
+      // make sure time hasn't already passed, if it has skip all this crap and return immediately
+      if(wakeTime > Machine.timer().getTime())
+      {
+	
     	//TO-DO: "All thread queue methods must be invoked with <b>interrupts disabled</b>." <-- In ThreadQueue abstract class, 
     	//so we should probably disable interrupts here in order to add the caller thread to the ThreadQueue readyQueue
     	//I would think this to be the case if there is only one alarm, and any number of threads can access it at a time.
-    	Machine.interrupt().disable();
+    	
+	// prevent race conditions on the ArrayList
+	boolean intStatus = Machine.interrupt().disable();
     	
     	//TO-DO: Central block for Alarm to suspend the thread and toss it onto a queue
     	//Looks like ready queue should be accessed from timerInterrupt() 
     	//Maybe add it to a "sleeping" list/queue so timerInterrupt() can check it as timer() calls it?
     	//Queue would alright if they were chronologically sorted, but a list structure could be random and still function
     	
-    	
-    	
-    	//After it's on the queue safely, and its time delta is being tracked we can suspend the thread
+	waitingThreads.add(new WaitingThread(KThread.currentThread(), wakeTime));
+	
+	//After it's on the queue safely, and its time delta is being tracked we can suspend the thread
     	KThread.sleep();
-    	
+
     	//And remember to re-enable interrupts once this block is finished
-    	Machine.interrupt().enable();
-    	
+    	Machine.interrupt().restore(intStatus);
+      }// if
+      
+
     	
     	/*  OLD THINGS AND DRAGONS  */
     		// for now, cheat just to get something working (busy waiting is bad)
@@ -90,4 +149,6 @@ public class Alarm {
     		// KThread.yield();
     	/*  OK, DRAGONS ARE GONE  */
     }
+
+  
 }

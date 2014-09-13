@@ -446,16 +446,9 @@ public class KThread {
 
     public void run()
     {
-      try
-      {
-	System.out.println("Child " + this.childNum + " running");
-	Thread.sleep(this.childNum * 1000);
-	System.out.println("Child " + this.childNum + " exiting");
-      }// try
-      catch(InterruptedException e)
-      {
-	System.err.println("Child " + this.childNum + "'s sleep was interrupted:" + e.getMessage());
-      }// catch
+      System.out.println("Child " + this.childNum + " running");
+      ThreadedKernel.alarm.waitUntil(this.childNum * 10000000);
+      System.out.println("Child " + this.childNum + " exiting");
     }// run
   }// ChildThread
 
