@@ -143,7 +143,7 @@ public class KThread {
 	
 	Lib.debug(dbgThread,
 		  "Forking thread: " + toString() + " Runnable: " + target);
-
+	
 	boolean intStatus = Machine.interrupt().disable();
 
 	tcb.start(new Runnable() {
