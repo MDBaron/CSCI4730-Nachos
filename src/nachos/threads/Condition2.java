@@ -54,14 +54,10 @@ public class Condition2 {
 
 	boolean intStatus = Machine.interrupt().disable();
 
-	try
+	if(!waitQueue.isEmpty())
 	{
 	  waitQueue.removeFirst().ready();
-	}// try
-	catch(NoSuchElementException e)
-	{
-	  // queue is empty, do nothing
-	}// catch
+	}// while
 
 	Machine.interrupt().restore(intStatus);
     }
@@ -75,17 +71,10 @@ public class Condition2 {
 
 	boolean intStatus = Machine.interrupt().disable();
 
-	try
+	while(!waitQueue.isEmpty())
 	{
-	  for(;;)
-	  {
-	    waitQueue.removeFirst().ready();
-	  }// for
-	}// try
-	catch(NoSuchElementException e)
-	{
-	  // end of queue
-	}// catch
+	  waitQueue.removeFirst().ready();
+	}// while
 
 	Machine.interrupt().restore(intStatus);
     }
