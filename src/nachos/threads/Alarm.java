@@ -13,10 +13,10 @@ public class Alarm {
 
   // Entity class that represents a KThread that is waiting until a certain
   // time to wake up
-  private class WaitingThread
+  private class WaitingThread implements Comparable<WaitingThread>
   {
-    KThread thread;
-    long wakeUpTime;
+    private KThread thread;
+    private long wakeUpTime;
 
     /**
      * Create a new WaitingThread container.
@@ -25,7 +25,7 @@ public class Alarm {
      * @param wakeUpTime the system time at which the thread should wake
      *
      */
-    public WaitingThread(KThread thread, long wakeUpTime)
+    public WaitingThread(KThread thread, long wakeUpTime) 
     {
       super();
       this.thread = thread;
@@ -41,18 +41,14 @@ public class Alarm {
     {
       return this.wakeUpTime;
     }// getWakeUpTime
-  }// WaitingThread
 
-  // ensures that waitingThreads is a minheap
-  private class WaitingThreadComparator implements Comparator<WaitingThread>
-  {
-    public int compare(WaitingThread x, WaitingThread y)
+    public int compareTo(WaitingThread other)
     {
-      if(x.getWakeUpTime() < y.getWakeUpTime())
+      if(this.wakeUpTime < other.wakeUpTime)
       {
 	return -1;
       }// if
-      else if(x.getWakeUpTime() == y.getWakeUpTime())
+      else if(this.wakeUpTime == other.wakeUpTime)
       {
 	return 0;
       }// if
@@ -60,11 +56,11 @@ public class Alarm {
       {
 	return 1;
       }// else
-    }// compare
-  }// WaitingThreadComparator
+    }// compareTo
+  }// WaitingThread
 
-  // minheap of threads sorted by desired wake up time that have called Alarm.waitUntil()
-  private PriorityQueue<WaitingThread> waitingThreads = new PriorityQueue<WaitingThread>(1, new WaitingThreadComparator());
+  // minheap of threads that have called Alarm.waitUntil() sorted by desired wake up time
+  private PriorityQueue<WaitingThread> waitingThreads = new PriorityQueue<WaitingThread>();
 
     /**
      * Allocate a new Alarm. Set the machine's timer interrupt handler to this
