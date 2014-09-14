@@ -466,6 +466,28 @@ public class KThread {
       thread[i].fork();
       //delta++;
     }// for
+
+/* make one thread have multiple threads waiting on it
+    class Runnable1 implements Runnable
+    { 
+      private KThread thread;  
+      
+      public Runnable1(KThread thread)
+      {
+	this.thread = thread;
+      }
+  
+      public void run()
+      {
+	thread.join(); 
+	System.out.println("http://bit.ly/1guOmow");
+      }
+    };
+    
+    (new KThread(new Runnable1(thread[5]))).fork();
+    (new KThread(new Runnable1(thread[5]))).fork();
+    (new KThread(new Runnable1(thread[5]))).fork();
+*/
     
    for(int i = 0; i < 10; i++)
     {

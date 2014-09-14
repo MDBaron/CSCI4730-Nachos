@@ -2,7 +2,8 @@ package nachos.threads;
 
 import nachos.machine.*;
 
-import java.util.ArrayList;
+import java.util.PriorityQueue;
+import java.util.Comparator;
 
 /**
  * Uses the hardware timer to provide preemption, and to allow threads to sleep
@@ -42,8 +43,28 @@ public class Alarm {
     }// getWakeUpTime
   }// WaitingThread
 
-  // list of threads that have called Alarm.waitUntil()
-  private ArrayList<WaitingThread> waitingThreads = new ArrayList<WaitingThread>();
+  // ensures that waitingThreads is a minheap
+  private class WaitingThreadComparator implements Comparator<WaitingThread>
+  {
+    public int compare(WaitingThread x, WaitingThread y)
+    {
+      if(x.getWakeUpTime() < y.getWakeUpTime())
+      {
+	return -1;
+      }// if
+      else if(x.getWakeUpTime() == y.getWakeUpTime())
+      {
+	return 0;
+      }// if
+      else
+      {
+	return 1;
+      }// else
+    }// compare
+  }// WaitingThreadComparator
+
+  // minheap of threads sorted by desired wake up time that have called Alarm.waitUntil()
+  private PriorityQueue<WaitingThread> waitingThreads = new PriorityQueue<WaitingThread>(1, new WaitingThreadComparator());
 
     /**
      * Allocate a new Alarm. Set the machine's timer interrupt handler to this
@@ -72,6 +93,7 @@ public class Alarm {
     	//TO-DO: if(elapsedTime >= necessarySleepTime){ pop thread from sleepingList? }
     	//TO-DO: This will need locks, due to multiple threads accessing
 
+/* 
       // iterate through list of waiting threads and wake the appropriate ones
       for(int i = 0; i < waitingThreads.size(); i++)
       {
@@ -85,6 +107,20 @@ public class Alarm {
 	  Machine.interrupt().restore(intStatus);
 	}// if
       }// for
+*/
+
+      for(WaitingThread firstElement = waitingThreads.peek();
+	  firstElement != null && firstElement.getWakeUpTime() <= Machine.timer().getTime();
+	  firstElement = waitingThreads.peek())
+      {
+	// lock this area down to prevent race conditions in the PriorityQueue
+	boolean intStatus = Machine.interrupt().disable();
+	
+	waitingThreads.poll().getThread().ready();
+	
+	Machine.interrupt().restore(intStatus);
+      }// for
+
     	
       // KThread.currentThread().yield();
     }
@@ -131,7 +167,7 @@ public class Alarm {
     	//Maybe add it to a "sleeping" list/queue so timerInterrupt() can check it as timer() calls it?
     	//Queue would alright if they were chronologically sorted, but a list structure could be random and still function
     	
-	waitingThreads.add(new WaitingThread(KThread.currentThread(), wakeTime));
+	waitingThreads.offer(new WaitingThread(KThread.currentThread(), wakeTime));
 	
 	//After it's on the queue safely, and its time delta is being tracked we can suspend the thread
     	KThread.sleep();
