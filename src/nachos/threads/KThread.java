@@ -437,7 +437,7 @@ public class KThread {
     private int childNum;
     private int deltaVal;
 
-    public ChildThread(int childNum/*, int deltaVal*/)
+    public ChildThread(int childNum)
     {
       super();
       this.childNum = childNum;
@@ -458,13 +458,12 @@ public class KThread {
   public static void threadJoin3()
   {
     KThread[] thread = new KThread[10];
-    //int delta = 0;
+
     for(int i = 0; i < 10; i++)
     {
-      thread[i] = new KThread(new ChildThread(i/*, delta-1*/));
+      thread[i] = new KThread(new ChildThread(i));
       thread[i].setName("Child " + i);
       thread[i].fork();
-      //delta++;
     }// for
 
 /* make one thread have multiple threads waiting on it
