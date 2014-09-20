@@ -5,11 +5,11 @@ public class Boat
 {
     static BoatGrader bg;
   static int childrenOnOahu;
-  static int childrenOnMolokai = 0;
+  static int childrenOnMolokai;
   static int adultsOnOahu;
-  static int childrenInBoat = 0;
-  static boolean boatOnOahu = true;
-  static boolean adultTurn = false;
+  static int childrenInBoat;
+  static boolean boatOnOahu;
+  static boolean adultTurn;
   static Lock lock = new Lock();
   static Condition2 adult = new Condition2(lock);
   static Condition2 childOnOahu = new Condition2(lock);
@@ -22,25 +22,23 @@ public class Boat
     {
 	BoatGrader b = new BoatGrader();
 	
-//	System.out.println("\n ***Testing Boats with only 2 children***");
-//	begin(0, 2, b);
+	System.out.println("\n ***Testing Boats with only 2 children***");
+	begin(0, 2, b);
 
-//	System.out.println("\n ***Testing Boats with 2 children, 1 adult***");
-//	begin(1, 2, b);
+	System.out.println("\n ***Testing Boats with 2 children, 1 adult***");
+	begin(1, 2, b);
 
-//	System.out.println("\n ***Testing Boats with 3 children, 3 adults***");
-//	begin(3, 3, b);
+	System.out.println("\n ***Testing Boats with 3 children, 3 adults***");
+	begin(3, 3, b);
 
-//	System.out.println("\n ***Testing Boats with 4 children, 0 adults***");
-//	begin(0, 4, b);
+	System.out.println("\n ***Testing Boats with 4 children, 0 adults***");
+	begin(0, 4, b);
 	
-//	System.out.println("\n ***Testing Boats with 5 children, 5 adults***");
-//	begin(5, 5, b);
+	System.out.println("\n ***Testing Boats with 5 children, 5 adults***");
+	begin(5, 5, b);
 
 	System.out.println("\n ***Testing Boats with 2 children, 6 adults***");
 	begin(6, 2, b);
-
-
     }
 
     public static void begin( int adults, int children, BoatGrader b )
@@ -48,8 +46,14 @@ public class Boat
 	// Store the externally generated autograder in a class
 	// variable to be accessible by children.
 	bg = b;
+
+	// initialize/reset variables
 	childrenOnOahu = children;
+	childrenOnMolokai = 0;
 	adultsOnOahu = adults;
+	childrenInBoat = 0;
+	boatOnOahu = true;
+	adultTurn = false;
 
 	class Adult implements Runnable
 	{
@@ -146,7 +150,7 @@ public class Boat
 	  boatGo.wake();// tell passenger we're shipping off 
 	  boatOnOahu = false;
 	}// if
-	else
+	else// second child gets in the boat
 	{
 	  // get in boat
 	  childrenInBoat++;
@@ -281,5 +285,4 @@ public class Boat
 	bg.AdultRideToMolokai();
 	bg.ChildRideToMolokai();
     }
-    
 }
