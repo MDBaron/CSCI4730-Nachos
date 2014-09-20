@@ -11,12 +11,12 @@ public class Boat
   static boolean boatOnOahu = true;
   static boolean adultTurn = false;
   static Lock lock = new Lock();
-  static Condition adult = new Condition(lock);
-  static Condition childOnOahu = new Condition(lock);
-  static Condition childOnMolokai = new Condition(lock);
-  static Condition boatFull = new Condition(lock);
-  static Condition boatGo = new Condition(lock);
-  static Condition boatEmpty = new Condition(lock);
+  static Condition2 adult = new Condition2(lock);
+  static Condition2 childOnOahu = new Condition2(lock);
+  static Condition2 childOnMolokai = new Condition2(lock);
+  static Condition2 boatFull = new Condition2(lock);
+  static Condition2 boatGo = new Condition2(lock);
+  static Condition2 boatEmpty = new Condition2(lock);
     
     public static void selfTest()
     {
@@ -28,11 +28,19 @@ public class Boat
 //	System.out.println("\n ***Testing Boats with 2 children, 1 adult***");
 //	begin(1, 2, b);
 
-	System.out.println("\n ***Testing Boats with 3 children, 3 adults***");
-	begin(3, 3, b);
+//	System.out.println("\n ***Testing Boats with 3 children, 3 adults***");
+//	begin(3, 3, b);
 
 //	System.out.println("\n ***Testing Boats with 4 children, 0 adults***");
 //	begin(0, 4, b);
+	
+//	System.out.println("\n ***Testing Boats with 5 children, 5 adults***");
+//	begin(5, 5, b);
+
+	System.out.println("\n ***Testing Boats with 2 children, 6 adults***");
+	begin(6, 2, b);
+
+
     }
 
     public static void begin( int adults, int children, BoatGrader b )
@@ -87,7 +95,7 @@ public class Boat
 	}// for
 	
 	// yay!
-	System.out.println("Everybody safely made it to Molokai.");
+	System.out.println(" ***Everybody made it to Molokai without getting eaten by Hawaiian lasersharks. Yaaaaayyy!***\n");
     }
 
     static void AdultItinerary()
@@ -187,7 +195,7 @@ public class Boat
 	    childrenOnOahu++;
 	    boatOnOahu = true;
 	    
-	    // if there's an adult, let him ride over
+	    // if there's an adult and someone to bring the boat back, let him ride over
 	    if(adultsOnOahu > 0 && childrenOnMolokai > 0)
 	    {
 	      adultTurn = true;
@@ -243,7 +251,7 @@ public class Boat
 	      childrenOnOahu++;
 	      boatOnOahu = true;
 	      
-	      // if there's an adult, let him ride over
+	      // if there's an adult and someone to bring the boat back, let him ride over
 	      if(adultsOnOahu > 0 && childrenOnMolokai > 0)
 	      {
 		adultTurn = true;
