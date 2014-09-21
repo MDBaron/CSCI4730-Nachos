@@ -17,7 +17,23 @@ public class Boat
   static Condition2 boatFull = new Condition2(lock);
   static Condition2 boatGo = new Condition2(lock);
   static Condition2 boatEmpty = new Condition2(lock);
-    
+
+  static class Adult implements Runnable
+	{
+	  public void run()
+	  {
+	    Boat.AdultItinerary();
+	  }
+	};
+
+  static class Child implements Runnable
+	{
+	  public void run()
+	  {
+	    Boat.ChildItinerary();
+	  }
+	};
+  
     public static void selfTest()
     {
 	BoatGrader b = new BoatGrader();
@@ -55,22 +71,6 @@ public class Boat
 	boatOnOahu = true;
 	adultTurn = false;
 
-	class Adult implements Runnable
-	{
-	  public void run()
-	  {
-	    Boat.AdultItinerary();
-	  }
-	};
-
-	class Child implements Runnable
-	{
-	  public void run()
-	  {
-	    Boat.ChildItinerary();
-	  }
-	};
-  
 	// create threads
 	KThread adultThreads[] = new KThread[adults];
 	for(int i = 0; i < adults; i++)
@@ -109,9 +109,13 @@ public class Boat
       // wait until signalled to go
       adult.sleep();
 
+      nachos.machine.Lib.assertTrue(adultTurn);
+
       // when signalled, one adult will row over
       bg.AdultRowToMolokai();
       adultsOnOahu--;
+
+      // land on molokai
       adultTurn = false;
       boatOnOahu = false;
 

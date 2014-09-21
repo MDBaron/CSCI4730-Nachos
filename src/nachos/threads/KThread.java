@@ -435,13 +435,11 @@ public class KThread {
   private static class ChildThread implements Runnable
   {
     private int childNum;
-    private int deltaVal;
 
     public ChildThread(int childNum)
     {
       super();
       this.childNum = childNum;
-      this.deltaVal = deltaVal;
     }// ctor
 
     public void run()

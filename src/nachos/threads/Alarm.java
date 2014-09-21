@@ -42,6 +42,7 @@ public class Alarm {
       return this.wakeUpTime;
     }// getWakeUpTime
 
+    // orders waiting threads by their wake up time
     public int compareTo(WaitingThread other)
     {
       if(this.wakeUpTime < other.wakeUpTime)
