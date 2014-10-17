@@ -46,10 +46,11 @@ public class ThreadedKernel extends Kernel {
      * tests here.
      */	
     public void selfTest() {
-	KThread.selfTest();
+//	KThread.selfTest();
 //	Semaphore.selfTest();
 //	SynchList.selfTest();
-	Boat.selfTest();
+//	Boat.selfTest();
+	PriorityScheduler.selfTest();
 
 /*
 	if (Machine.bank() != null) {
