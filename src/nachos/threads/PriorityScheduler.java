@@ -67,6 +67,7 @@ public class PriorityScheduler extends Scheduler {
     getThreadState(thread).setPriority(priority);
   }
   
+  //Increment by one
   public boolean increasePriority() {
     boolean intStatus = Machine.interrupt().disable();
     boolean ret = true;
@@ -83,6 +84,7 @@ public class PriorityScheduler extends Scheduler {
     return ret;
   }
   
+  //Decrement by one
   public boolean decreasePriority() {
     boolean intStatus = Machine.interrupt().disable();
     boolean ret = true;
@@ -119,9 +121,9 @@ public class PriorityScheduler extends Scheduler {
    * @return	the scheduling state of the specified thread.
    */
   protected ThreadState getThreadState(KThread thread) {
-    if (thread.schedulingState == null)
-      thread.schedulingState = new ThreadState(thread);
-    
+    if (thread.schedulingState == null){
+        thread.schedulingState = new ThreadState(thread);
+    }
     return (ThreadState) thread.schedulingState;
   }
   
@@ -149,21 +151,21 @@ public class PriorityScheduler extends Scheduler {
      *
      * @return	the next thread to run or null if the wait list is empty
      */
+    //CJ Implemented
     public KThread nextThread() {
-      Lib.assertTrue(Machine.interrupt().disabled());
+        Lib.assertTrue(Machine.interrupt().disabled());
 
-      // get ThreadState object for the next thread to run
-      ThreadState ts = pickNextThread();
+        // get ThreadState object for the next thread to run
+        ThreadState ts = pickNextThread();
 
-      // return null if the wait list is empty
-      if(ts == null)
-      {
-	return null;
-      }// if
+        // return null if the wait list is empty
+        if(ts == null){
+    	    return null;
+        }// if
       
-      KThread returnThread = ts.thread;
-      acquire(returnThread);
-      return returnThread;
+        KThread returnThread = ts.thread;
+        acquire(returnThread);
+        return returnThread;
     }
     
     /**
@@ -173,36 +175,33 @@ public class PriorityScheduler extends Scheduler {
      * @return	the next thread that <tt>nextThread()</tt> would
      *		return or null if the wait queue is empty.
      */
-    protected ThreadState pickNextThread() 
-    {
-      KThread returnThread = null;// the thread to return
-      int highestPriority = -1;
+    //CJ Implemented
+    protected ThreadState pickNextThread() {
+        KThread returnThread = null;// the thread to return
+        int highestPriority = -1;
 
-      // iterate through the wait queue to find the earliest highest priority
-      for(KThread thread : waitQueue)
-      {
-	// use effective or regular priority depending on transferPriority 
-	int threadPriority = transferPriority ? getEffectivePriority(thread) : getPriority(thread);
+        // iterate through the wait queue to find the earliest highest priority
+        for(KThread thread : waitQueue){
+	        // use effective or regular priority depending on transferPriority 
+	        int threadPriority = transferPriority ? getEffectivePriority(thread) : getPriority(thread);
 
-	/* since we use > instead of >= here, it returns the first occurrence of
-	   a thread with the highest priority if there are multiple threads with
-	   the highest priority */
-	if(threadPriority > highestPriority)
-	{
-	  highestPriority = threadPriority;
-	  returnThread = thread;
-	}// if
-      }// for
-      
-      return returnThread == null ? null : getThreadState(returnThread);
+	       /* since we use > instead of >= here, it returns the first occurrence of
+	       a thread with the highest priority if there are multiple threads with
+	       the highest priority */
+	       if(threadPriority > highestPriority) {
+	           highestPriority = threadPriority;
+	           returnThread = thread;
+	       }// if
+        }// for
+        return returnThread == null ? null : getThreadState(returnThread);
     }
     
+    //CJ Implemented
     public void print() {
       Lib.assertTrue(Machine.interrupt().disabled());
       
-      for(KThread thread : waitQueue)
-      {
-	System.out.println(thread);
+      for(KThread thread : waitQueue) {
+	      System.out.println(thread);
       }// for
     }
     
@@ -214,7 +213,14 @@ public class PriorityScheduler extends Scheduler {
 
     /** The queue holding all waiting threads */
     public LinkedList<KThread> waitQueue = new LinkedList<KThread>();
-  }
+  }//PriorityQueue
+  
+  
+  /*
+   * ThreadState Class
+   * ~Requires implementation of getEffectivePriority()
+   * ~Add Priority Inversion state casting
+   */
   
   /**
    * The scheduling state of a thread. This should include the thread's
@@ -232,7 +238,7 @@ public class PriorityScheduler extends Scheduler {
      */
     public ThreadState(KThread thread) {
       this.thread = thread;
-      
+      setInversion(false);
       setPriority(priorityDefault);
       effectivePriority = priority;
     }
@@ -243,8 +249,12 @@ public class PriorityScheduler extends Scheduler {
      * @return	the priority of the associated thread.
      */
     public int getPriority() {
-      return priority;
-    }
+    	if(!priorityInversion){//Check if inversion is in progress
+    		return priority;
+    	} else {
+    		return getEffectivePriority();
+    	}
+    }//getPriority
     
     /**
      * Return the effective priority of the associated thread.
@@ -252,12 +262,36 @@ public class PriorityScheduler extends Scheduler {
      * @return	the effective priority of the associated thread.
      */
     public int getEffectivePriority() {
+      int comparePriority = getPriority();
       
-      // implement me
-      // this is gonna be a bitch
+      
+      
+      //#TO-Do
+      
       
       return effectivePriority;
     }
+    
+    /**
+     * 
+     * Set Priority Inversion state for the associated thread to the specified value
+     * 
+     * @param state the new state
+     * 
+     */
+    public void setInversion(boolean state){
+    	priorityInversion = state;
+    }//setInversion
+    
+    /**
+     * 
+     * Return the Priority Inversion state for the associated thread
+     * 
+     * 
+     */
+    public boolean getInversion(){
+    	return priorityInversion;
+    }//setInversion
     
     /**
      * Set the priority of the associated thread to the specified value.
@@ -304,14 +338,36 @@ public class PriorityScheduler extends Scheduler {
       waitQueue.waitQueue.remove(thread);
     }	
     
+    
+    /*
+     * 
+     * Protected variables at the bottom for no reason
+     * 
+     */
+    
+    /** Priority Inversion is in progress **/
+    protected boolean priorityInversion;
     /** The thread with which this object is associated. */	   
     protected KThread thread;
     /** The priority of the associated thread. */
     protected int priority;
     /** The effective priority of the associated thread. */
     protected int effectivePriority;
-  }
+  }//ThreadState
 
+  
+  
+  
+  /* 
+   * 
+   * Test Section
+   * 
+   */
+  
+  
+  
+  
+  
   public static void selfTestRun( KThread t1, int t1p, KThread t2, int t2p ) 
   {
     boolean int_state;
@@ -494,4 +550,4 @@ public class PriorityScheduler extends Scheduler {
     selfTestRun( t1, 6, t2, 4, t3, 7 );
 */
   }
-}
+}//PriorityScheduler
