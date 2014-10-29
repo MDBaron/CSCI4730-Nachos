@@ -32,6 +32,8 @@ public class PriorityScheduler extends Scheduler {
    * Allocate a new priority scheduler.
    */
   public PriorityScheduler() {
+	  //Goes nowhere
+	  //Does nothing
   }
   
   /**
@@ -164,6 +166,7 @@ public class PriorityScheduler extends Scheduler {
         }// if
       
         KThread returnThread = ts.thread;
+        //Purge dem queues
         acquire(returnThread);
         return returnThread;
     }
@@ -183,7 +186,7 @@ public class PriorityScheduler extends Scheduler {
         // iterate through the wait queue to find the earliest highest priority
         for(KThread thread : waitQueue){
 	        // use effective or regular priority depending on transferPriority 
-	        int threadPriority = transferPriority ? getEffectivePriority(thread) : getPriority(thread);
+	       int threadPriority = transferPriority ? getEffectivePriority(thread) : getPriority(thread);
 
 	       /* since we use > instead of >= here, it returns the first occurrence of
 	       a thread with the highest priority if there are multiple threads with
@@ -237,11 +240,8 @@ public class PriorityScheduler extends Scheduler {
      * @param	thread	the thread this state belongs to.
      */
     public ThreadState(KThread thread) {
-      inversionQueue = new LinkedList<KThread>();
-      //Dr. Barnes was saying that this class should hold a "Data structure" 
-      //That will chart the priority inversions
-      //I would assume that we could pop them into this list, and iterate it as 
-      //We need to find the highest priority to donate to the locked thread
+      
+      acquiredQueues = new LinkedList<PriorityQueue>();
       this.thread = thread;
       setInversion(false);
       setPriority(priorityDefault);
@@ -270,7 +270,7 @@ public class PriorityScheduler extends Scheduler {
   	} else {
       
   		//Find the priority queue, and retrieve the highest priority
-  		for(KThread candidate : inversionQueue){
+  		//for(KThread candidate : inversionQueue){
   			
   			//TO-DO
   			//Need to find away of returning the thread state to grab the priority 
@@ -278,12 +278,12 @@ public class PriorityScheduler extends Scheduler {
   			
   			//if(candidate.getThreadState().getPriority() > comparePriority){
   			//	tempPriority = candidate.getThreadState().getPriority();
-  			//}
-  		}
+  			}
+  		//}
   		//Donate that priority to this thread
   		effectivePriority = tempPriority;
       return effectivePriority;
-  	}
+  	//}
     }
     
    
@@ -337,6 +337,7 @@ public class PriorityScheduler extends Scheduler {
      * @see	nachos.threads.ThreadQueue#waitForAccess
      */
     public void waitForAccess(PriorityQueue waitQueue) {
+    	
       waitQueue.waitQueue.add(thread);
     }
     
@@ -352,6 +353,7 @@ public class PriorityScheduler extends Scheduler {
      */
     public void acquire(PriorityQueue waitQueue) {
       waitQueue.waitQueue.remove(thread);
+      acquiredQueues.add(waitQueue);
     }	
     
     
@@ -369,8 +371,9 @@ public class PriorityScheduler extends Scheduler {
     protected int priority;
     /** The effective priority of the associated thread. */
     protected int effectivePriority;
-    /** Queue to track priority inversion candidates on a lock */
-    public LinkedList<KThread> inversionQueue;
+    /** Stores a list of PriorityQueues */
+    public LinkedList<PriorityQueue> acquiredQueues;
+    
   }//ThreadState
 
   
