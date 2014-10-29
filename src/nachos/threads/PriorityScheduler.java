@@ -237,6 +237,11 @@ public class PriorityScheduler extends Scheduler {
      * @param	thread	the thread this state belongs to.
      */
     public ThreadState(KThread thread) {
+      inversionQueue = new LinkedList<KThread>();
+      //Dr. Barnes was saying that this class should hold a "Data structure" 
+      //That will chart the priority inversions
+      //I would assume that we could pop them into this list, and iterate it as 
+      //We need to find the highest priority to donate to the locked thread
       this.thread = thread;
       setInversion(false);
       setPriority(priorityDefault);
@@ -249,11 +254,7 @@ public class PriorityScheduler extends Scheduler {
      * @return	the priority of the associated thread.
      */
     public int getPriority() {
-    	if(!priorityInversion){//Check if inversion is in progress
     		return priority;
-    	} else {
-    		return getEffectivePriority();
-    	}
     }//getPriority
     
     /**
@@ -263,14 +264,29 @@ public class PriorityScheduler extends Scheduler {
      */
     public int getEffectivePriority() {
       int comparePriority = getPriority();
+      int tempPriority = getPriority();
+      if(!priorityInversion){//Check if inversion is in progress
+  		return priority;
+  	} else {
       
-      
-      
-      //#TO-Do
-      
-      
+  		//Find the priority queue, and retrieve the highest priority
+  		for(KThread candidate : inversionQueue){
+  			
+  			//TO-DO
+  			//Need to find away of returning the thread state to grab the priority 
+  			//and pass it down the inversion list
+  			
+  			//if(candidate.getThreadState().getPriority() > comparePriority){
+  			//	tempPriority = candidate.getThreadState().getPriority();
+  			//}
+  		}
+  		//Donate that priority to this thread
+  		effectivePriority = tempPriority;
       return effectivePriority;
+  	}
     }
+    
+   
     
     /**
      * 
@@ -353,6 +369,8 @@ public class PriorityScheduler extends Scheduler {
     protected int priority;
     /** The effective priority of the associated thread. */
     protected int effectivePriority;
+    /** Queue to track priority inversion candidates on a lock */
+    public LinkedList<KThread> inversionQueue;
   }//ThreadState
 
   
