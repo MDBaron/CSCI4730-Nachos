@@ -133,9 +133,13 @@ public class PriorityScheduler extends Scheduler {
    * A <tt>ThreadQueue</tt> that sorts threads by priority.
    */
   protected class PriorityQueue extends ThreadQueue {
+	  
+	  private KThread resourceHolder;
+	  
     PriorityQueue(boolean transferPriority) {
       this.transferPriority = transferPriority;
     }
+    
     
     public void waitForAccess(KThread thread) {
       Lib.assertTrue(Machine.interrupt().disabled());
@@ -143,6 +147,7 @@ public class PriorityScheduler extends Scheduler {
     }
     
     public void acquire(KThread thread) {
+    	resourceHolder = thread;
       Lib.assertTrue(Machine.interrupt().disabled());
       getThreadState(thread).acquire(this);
     }
@@ -159,14 +164,14 @@ public class PriorityScheduler extends Scheduler {
 
         // get ThreadState object for the next thread to run
         ThreadState ts = pickNextThread();
-
+        getThreadState(resourceHolder).getAcquiredQueues().remove(this);
         // return null if the wait list is empty
         if(ts == null){
+        	resourceHolder = null;
     	    return null;
         }// if
-      
+        resourceHolder = ts.thread;
         KThread returnThread = ts.thread;
-        //Purge dem queues
         acquire(returnThread);
         return returnThread;
     }
@@ -240,10 +245,8 @@ public class PriorityScheduler extends Scheduler {
      * @param	thread	the thread this state belongs to.
      */
     public ThreadState(KThread thread) {
-      
       acquiredQueues = new LinkedList<PriorityQueue>();
       this.thread = thread;
-      setInversion(false);
       setPriority(priorityDefault);
       effectivePriority = priority;
     }
@@ -263,51 +266,22 @@ public class PriorityScheduler extends Scheduler {
      * @return	the effective priority of the associated thread.
      */
     public int getEffectivePriority() {
-      int comparePriority = getPriority();
-      int tempPriority = getPriority();
-      if(!priorityInversion){//Check if inversion is in progress
+      
+      if(acquiredQueues.isEmpty()){//Check if inversion is in progress
   		return priority;
   	} else {
-      
-  		//Find the priority queue, and retrieve the highest priority
-  		//for(KThread candidate : inversionQueue){
-  			
-  			//TO-DO
-  			//Need to find away of returning the thread state to grab the priority 
-  			//and pass it down the inversion list
-  			
-  			//if(candidate.getThreadState().getPriority() > comparePriority){
-  			//	tempPriority = candidate.getThreadState().getPriority();
-  			}
-  		//}
-  		//Donate that priority to this thread
-  		effectivePriority = tempPriority;
-      return effectivePriority;
-  	//}
-    }
-    
-   
-    
-    /**
-     * 
-     * Set Priority Inversion state for the associated thread to the specified value
-     * 
-     * @param state the new state
-     * 
-     */
-    public void setInversion(boolean state){
-    	priorityInversion = state;
-    }//setInversion
-    
-    /**
-     * 
-     * Return the Priority Inversion state for the associated thread
-     * 
-     * 
-     */
-    public boolean getInversion(){
-    	return priorityInversion;
-    }//setInversion
+  		int tempPriority;
+  		for(PriorityQueue waitQueue : acquiredQueues){
+  			for(int j = 0; j < waitQueue.waitQueue.size(); j++){
+  				tempPriority = getThreadState(waitQueue.waitQueue.get(j)).getEffectivePriority();
+  				if(priority < tempPriority){
+  					effectivePriority = tempPriority;
+  				}//if
+  			}//for
+  		}//for
+  			return effectivePriority;
+  	}//else
+ }
     
     /**
      * Set the priority of the associated thread to the specified value.
@@ -357,6 +331,11 @@ public class PriorityScheduler extends Scheduler {
     }	
     
     
+    public LinkedList<PriorityQueue> getAcquiredQueues(){
+    	return acquiredQueues;
+    }//getAcquiredQueues
+  
+    
     /*
      * 
      * Protected variables at the bottom for no reason
@@ -372,7 +351,7 @@ public class PriorityScheduler extends Scheduler {
     /** The effective priority of the associated thread. */
     protected int effectivePriority;
     /** Stores a list of PriorityQueues */
-    public LinkedList<PriorityQueue> acquiredQueues;
+    protected LinkedList<PriorityQueue> acquiredQueues;
     
   }//ThreadState
 
