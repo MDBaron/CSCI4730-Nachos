@@ -161,21 +161,21 @@ public class PriorityScheduler extends Scheduler {
     //CJ Implemented
     public KThread nextThread() {
       Lib.assertTrue(Machine.interrupt().disabled());
-
+      
       getThreadState(resourceHolder).getAcquiredQueues().remove(this);
       
       // get ThreadState object for the next thread to run
       ThreadState ts = pickNextThread();
-
+      
       // return null if the wait list is empty
       if(ts == null){
 	resourceHolder = null;
 	return null;
       }// if
-
+      
       resourceHolder = ts.thread;
       KThread returnThread = ts.thread;
-
+      
       acquire(returnThread);
       return returnThread;
     }// PriorityQueue
@@ -195,7 +195,7 @@ public class PriorityScheduler extends Scheduler {
       // iterate through the wait queue to find the earliest highest priority
       for(KThread thread : waitQueue){
 	// use effective or regular priority depending on transferPriority 
-
+	
 	int threadPriority = transferPriority ? getEffectivePriority(thread) : getPriority(thread);
 	
 	/* since we use > instead of >= here, it returns the first occurrence of
@@ -267,7 +267,7 @@ public class PriorityScheduler extends Scheduler {
       if(acquiredQueues.isEmpty()){
 	return priority;
       }// if
-
+      
       int tempPriority;
       effectivePriority = priority;	
       for(PriorityQueue waitQueue : acquiredQueues){
@@ -278,7 +278,7 @@ public class PriorityScheduler extends Scheduler {
 	  }//if
 	}//for
       }//for
-
+      
       return effectivePriority;
     }
     
@@ -412,7 +412,7 @@ public class PriorityScheduler extends Scheduler {
      * This runs t1 with priority 7, and t2 with priority 4.
      *
      */
-
+    
     System.out.println( "Case 1:" );
     
     t1 = new KThread(new Runnable() {
@@ -448,7 +448,7 @@ public class PriorityScheduler extends Scheduler {
      * half-way through t1's process its priority is lowered to 2.
      *
      */
-
+    
     System.out.println( "Case 2:" );
     
     t1 = new KThread(new Runnable() {
@@ -491,158 +491,257 @@ public class PriorityScheduler extends Scheduler {
      * t3 is given control in order to help unlock t1.
      *
      */
-
-  System.out.println( "Case 3:" );
-  
-  lock = new Lock();
-  condition = new Condition2( lock );
-  
-  t1 = new KThread(new Runnable() {
-  public void run() {
-  System.out.println( KThread.currentThread().getName() + " trying to grab the lock" );
-  lock.acquire();
-  System.out.println( KThread.currentThread().getName() + " active" );
-  lock.release();
-  }
-  });
-  
-  t2 = new KThread(new Runnable() {
-  public void run() {
-  System.out.println( KThread.currentThread().getName() + " started working" );
-  for( int i = 0; i < 3; ++i ) {
-  System.out.println( KThread.currentThread().getName() + " working " + i );
-  KThread.yield();
-  }
-  System.out.println( KThread.currentThread().getName() + " finished working" );
-  }
-  
-  });
-  
-  t3 = new KThread(new Runnable() {
-  public void run() {
-  lock.acquire();
-  System.out.println( KThread.currentThread().getName() + " started working and has acquired the lock" );
-  boolean int_state = Machine.interrupt().disable();
-  System.out.println( KThread.currentThread().getName() + " is dropping priority to 2" );
-  ThreadedKernel.scheduler.setPriority( 2 );
-  Machine.interrupt().restore( int_state );
-  
-  KThread.yield();
-  
-  // t1.acquire() will now have to realise that t3 owns the lock it wants to obtain
-  // so program execution will continue here.
-  
-  System.out.println( KThread.currentThread().getName() + " active ('a' wants its lock back so we are here)" );
-  lock.release();
-  KThread.yield();
-  lock.acquire();
-  System.out.println( KThread.currentThread().getName() + " active-again (should be after 'a' and 'b' done)" );
-  lock.release();
-  
-  }
-  });
-  
-  selfTestRun( t1, 6, t2, 4, t3, 7 );
-
-  /*
-   * Case 4
-   *
-   * Test multiple priority inversions
-   *
-   */
-  
-  System.out.println( "Case 4:" );
-
-  t1 = new KThread(new Runnable()
-  {
-    public void run()
-    {
-      for(int i = 0; i < 5; i++)
-      {
-	boolean intStatus = Machine.interrupt().disable();
-	System.out.println("t1, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
-	Machine.interrupt().restore(intStatus);
-
-	if(i == 0)
-	{
-	  lock.acquire();
-	  System.out.println("t1 grabbed lock");
-	  boolean intStatus2 = Machine.interrupt().disable();
-	  ThreadedKernel.scheduler.setPriority(3);
-	  Machine.interrupt().restore(intStatus2);
-	  System.out.println("t1 priority went from 7 to 3");
-	}// if
-
-	if(i == 2)
-	{
-	  lock.release();
-	  System.out.println("t1 released lock");
-	}// if
+    
+    System.out.println( "Case 3:" );
+    
+    lock = new Lock();
+    condition = new Condition2( lock );
+    
+    t1 = new KThread(new Runnable() {
+      public void run() {
+	System.out.println( KThread.currentThread().getName() + " trying to grab the lock" );
+	lock.acquire();
+	System.out.println( KThread.currentThread().getName() + " active" );
+	lock.release();
+      }
+    });
+    
+    t2 = new KThread(new Runnable() {
+      public void run() {
+	System.out.println( KThread.currentThread().getName() + " started working" );
+	for( int i = 0; i < 3; ++i ) {
+	  System.out.println( KThread.currentThread().getName() + " working " + i );
+	  KThread.yield();
+	}
+	System.out.println( KThread.currentThread().getName() + " finished working" );
+      }
+      
+    });
+    
+    t3 = new KThread(new Runnable() {
+      public void run() {
+	lock.acquire();
+	System.out.println( KThread.currentThread().getName() + " started working and has acquired the lock" );
+	boolean int_state = Machine.interrupt().disable();
+	System.out.println( KThread.currentThread().getName() + " is dropping priority to 2" );
+	ThreadedKernel.scheduler.setPriority( 2 );
+	Machine.interrupt().restore( int_state );
 	
 	KThread.yield();
-      }// for
-    }// run
-  });
-
-  t2 = new KThread(new Runnable()
-  {
-    public void run()
-    {
-      for(int i = 0; i < 5; i++)
-      {
-	boolean intStatus = Machine.interrupt().disable();
-	System.out.println("t2, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
-	Machine.interrupt().restore(intStatus);
-
-	if(i == 2)
-	{
-	  System.out.println("t2 wants to grab lock");
-	  lock.acquire();
-	  System.out.println("t2 grabbed lock");
-	}// if
-
-	KThread.yield();
-      }// for
-
-      lock.release();
-      System.out.println("t2 released lock");
-    }// run
-  });
-  
-  t3 = new KThread(new Runnable()
-  {
-    public void run()
-    {
-      for(int i = 0; i < 5; i++)
-      {
-	boolean intStatus = Machine.interrupt().disable();
-	System.out.println("t3, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
-	Machine.interrupt().restore(intStatus);
 	
-	if(i == 1)
+	// t1.acquire() will now have to realise that t3 owns the lock it wants to obtain
+	// so program execution will continue here.
+	
+	System.out.println( KThread.currentThread().getName() + " active ('a' wants its lock back so we are here)" );
+	lock.release();
+	KThread.yield();
+	lock.acquire();
+	System.out.println( KThread.currentThread().getName() + " active-again (should be after 'a' and 'b' done)" );
+	lock.release();
+	
+      }
+    });
+    
+    selfTestRun( t1, 6, t2, 4, t3, 7 );
+    
+    /*
+     * Case 4
+     *
+     * Test multiple priority inversions. Tests cases d and e from the project page.
+     *
+     */
+    
+    System.out.println( "Case 4:" );
+    
+    t1 = new KThread(new Runnable()
+    {
+      public void run()
+      {
+	for(int i = 0; i < 5; i++)
 	{
-	  System.out.println("t3 wants to grab lock");
-	  lock.acquire();
-	  System.out.println("t3 grabbed lock");
-	}// if
-
-	if(i == 2)
+	  boolean intStatus = Machine.interrupt().disable();
+	  System.out.println("t1, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
+	  Machine.interrupt().restore(intStatus);
+	  
+	  if(i == 0)
+	  {
+	    lock.acquire();
+	    System.out.println("t1 grabbed lock");
+	    boolean intStatus2 = Machine.interrupt().disable();
+	    ThreadedKernel.scheduler.setPriority(3);
+	    Machine.interrupt().restore(intStatus2);
+	    System.out.println("t1 priority went from 7 to 3");
+	  }// if
+	  
+	  if(i == 2)
+	  {
+	    lock.release();
+	    System.out.println("t1 released lock");
+	  }// if
+	  
+	  KThread.yield();
+	}// for
+      }// run
+    });
+    
+    t2 = new KThread(new Runnable()
+    {
+      public void run()
+      {
+	for(int i = 0; i < 5; i++)
 	{
-	  boolean intStatus2 = Machine.interrupt().disable();
-	  ThreadedKernel.scheduler.setPriority(2);
-	  Machine.interrupt().restore(intStatus2);
-	  System.out.println("t3 priority went from 5 to 2");
-	}// if
+	  boolean intStatus = Machine.interrupt().disable();
+	  System.out.println("t2, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
+	  Machine.interrupt().restore(intStatus);
+	  
+	  if(i == 2)
+	  {
+	    System.out.println("t2 wants to grab lock");
+	    lock.acquire();
+	    System.out.println("t2 grabbed lock");
+	  }// if
+	  
+	  KThread.yield();
+	}// for
+	
+	lock.release();
+	System.out.println("t2 released lock");
+      }// run
+    });
+    
+    t3 = new KThread(new Runnable()
+    {
+      public void run()
+      {
+	for(int i = 0; i < 5; i++)
+	{
+	  boolean intStatus = Machine.interrupt().disable();
+	  System.out.println("t3, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
+	  Machine.interrupt().restore(intStatus);
+	  
+	  if(i == 1)
+	  {
+	    System.out.println("t3 wants to grab lock");
+	    lock.acquire();
+	    System.out.println("t3 grabbed lock");
+	  }// if
+	  
+	  if(i == 2)
+	  {
+	    boolean intStatus2 = Machine.interrupt().disable();
+	    ThreadedKernel.scheduler.setPriority(2);
+	    Machine.interrupt().restore(intStatus2);
+	    System.out.println("t3 priority went from 5 to 2");
+	  }// if
+	  
+	  KThread.yield();
+	}// for
+	
+	lock.release();
+	System.out.println("t3 released lock");
+      }// run
+    });
+    
+    selfTestRun( t1, 7, t2, 4, t3, 5 );
+    
+    /*
+     * Case 5
+     *
+     * The exciting sequel to case 4. Tests f from the project page.
+     *
+     */
+    
+    System.out.println( "Case 5:" );
+    
+    t1 = new KThread(new Runnable()
+    {
+      public void run()
+      {
+	for(int i = 0; i < 5; i++)
+	{
+	  boolean intStatus = Machine.interrupt().disable();
+	  System.out.println("t1, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
+	  Machine.interrupt().restore(intStatus);
+	  
+	  if(i == 2)
+	  {
+	    lock.acquire();
+	    System.out.println("t1 grabbed lock");
+	    boolean intStatus2 = Machine.interrupt().disable();
+	    ThreadedKernel.scheduler.setPriority(1);
+	    Machine.interrupt().restore(intStatus2);
+	    System.out.println("t1 priority went from 7 to 1");
+	  }// if
 
-      KThread.yield();
-      }// for
+	  KThread.yield();
+	}// for
+	
+	lock.release();
+	System.out.println("t1 released lock");
+      }// run
+    });
+    
+    t2 = new KThread(new Runnable()
+    {
+      public void run()
+      {
+	for(int i = 0; i < 5; i++)
+	{
+	  boolean intStatus = Machine.interrupt().disable();
+	  System.out.println("t2, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
+	  Machine.interrupt().restore(intStatus);
 
-      lock.release();
-      System.out.println("t3 released lock");
-    }// run
-  });
+	  if(i == 2)
+	  {
+	    boolean intStatus2 = Machine.interrupt().disable();
+	    ThreadedKernel.scheduler.setPriority(4);
+	    Machine.interrupt().restore(intStatus2);
+	    System.out.println("t2 priority went from 6 to 4");
 
-  selfTestRun( t1, 7, t2, 4, t3, 5 );
-  
+	    System.out.println("t2 wants to grab lock");
+	    lock.acquire();
+	    System.out.println("t2 grabbed lock");
+	  }// if
+
+	  KThread.yield();
+	}// for
+	
+	lock.release();
+	System.out.println("t2 released lock");
+      }// run
+    });
+    
+    t3 = new KThread(new Runnable()
+    {
+      public void run()
+      {
+	for(int i = 0; i < 5; i++)
+	{
+	  boolean intStatus = Machine.interrupt().disable();
+	  System.out.println("t3, p" + ThreadedKernel.scheduler.getPriority() + ", ep" + ThreadedKernel.scheduler.getEffectivePriority() + " - " + i);
+	  Machine.interrupt().restore(intStatus);
+
+	  if(i == 2)
+	  {
+	    boolean intStatus2 = Machine.interrupt().disable();
+	    ThreadedKernel.scheduler.setPriority(3);
+	    Machine.interrupt().restore(intStatus2);
+	    System.out.println("t3 priority went from 5 to 3");
+	    
+	    System.out.println("t3 wants to grab lock");
+	    lock.acquire();
+	    System.out.println("t3 grabbed lock");
+	  }// if
+
+	  KThread.yield();
+	}// for
+	
+	lock.release();
+	System.out.println("t3 released lock");
+      }// run
+    });
+    
+    selfTestRun( t1, 7, t2, 6, t3, 5 );
+    
   }// selfTest
 }//PriorityScheduler
