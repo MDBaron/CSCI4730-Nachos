@@ -396,6 +396,27 @@ public class PriorityScheduler extends Scheduler {
     t2.join();
     t3.join();
   }
+
+  public static void selfTestRun(KThread[] threadList, int[] priorityList )
+  {
+    int numThreads = threadList.length;
+    boolean int_state = Machine.interrupt().disable();
+    for(int i = 0; i < numThreads; i++)
+    {
+      ThreadedKernel.scheduler.setPriority( threadList[i], priorityList[i] );
+    }// for
+    Machine.interrupt().restore( int_state );
+
+    for(int i = 0; i < numThreads; i++)
+    {
+      threadList[i].setName(Integer.valueOf(i).toString()).fork();
+    }// for
+    
+    for(int i = 0; i < numThreads; i++)
+    {
+      threadList[i].join();
+    }// for
+  }// selfTestRun
   
   /**
    * Tests whether this module is working.
@@ -413,7 +434,7 @@ public class PriorityScheduler extends Scheduler {
      *
      */
     
-    System.out.println( "Case 1:" );
+    System.out.println( "\nCase 1:" );
     
     t1 = new KThread(new Runnable() {
       public void run() {
@@ -449,7 +470,7 @@ public class PriorityScheduler extends Scheduler {
      *
      */
     
-    System.out.println( "Case 2:" );
+    System.out.println( "\nCase 2:" );
     
     t1 = new KThread(new Runnable() {
       public void run() {
@@ -492,7 +513,7 @@ public class PriorityScheduler extends Scheduler {
      *
      */
     
-    System.out.println( "Case 3:" );
+    System.out.println( "\nCase 3:" );
     
     lock = new Lock();
     condition = new Condition2( lock );
@@ -551,7 +572,7 @@ public class PriorityScheduler extends Scheduler {
      *
      */
     
-    System.out.println( "Case 4:" );
+    System.out.println( "\nCase 4:" );
     
     t1 = new KThread(new Runnable()
     {
@@ -651,7 +672,7 @@ public class PriorityScheduler extends Scheduler {
      *
      */
     
-    System.out.println( "Case 5:" );
+    System.out.println( "\nCase 5:" );
     
     t1 = new KThread(new Runnable()
     {
@@ -742,6 +763,37 @@ public class PriorityScheduler extends Scheduler {
     });
     
     selfTestRun( t1, 7, t2, 6, t3, 5 );
-    
+
+    /*
+     *
+     * stress test: tests basic priority queue functionality.  should print all priority 7 threads, then 6, then 5... and 
+     * each priority group should print in order.
+     * 
+     */
+
+    System.out.println( "\nCase: 6" );
+
+    class Speak implements Runnable
+    {
+      public void run()
+      {
+	System.out.println(KThread.currentThread().getName() + " - p" + ((ThreadState) KThread.currentThread().schedulingState).getPriority());
+      }// run
+    }// speak
+
+    final int NUM_THREADS = 25;
+
+    KThread[] tList = new KThread[NUM_THREADS];
+    int[] pList = new int[NUM_THREADS];
+
+    java.util.Random rand = new java.util.Random();
+
+    for(int i = 0; i < NUM_THREADS; i++)
+    {
+      tList[i] = new KThread(new Speak());
+      pList[i] = Math.abs(rand.nextInt() % 8);
+    }// for
+
+    selfTestRun(tList, pList);
   }// selfTest
 }//PriorityScheduler
