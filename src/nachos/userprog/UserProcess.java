@@ -346,18 +346,69 @@ public class UserProcess {
 	return 0;
     }
 
+    //TO-DO: Syscall handlers
 
+    private int handleExit(int a0) {
+    	String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+    	
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleExit
+
+	private int handleJoin(int a0, int a1) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleJoin
+
+	private int handleCreate(int a0) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleCreate
+
+	private int handleOpen(int a0) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleOpen
+
+	private int handleRead(int a0, int a1, int a2) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleRead
+
+	private int handleWrite(int a0, int a1, int a2) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleWrite
+
+	private int handleClose(int a0) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleClose
+
+	private int handleUnlink(int a0) {
+		String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+		// TODO Auto-generated method stub
+		return 0;
+	}//handleUnlink
+    
+    
     private static final int
         syscallHalt = 0,
-	syscallExit = 1,
-	syscallExec = 2,
-	syscallJoin = 3,
-	syscallCreate = 4,
-	syscallOpen = 5,
-	syscallRead = 6,
-	syscallWrite = 7,
-	syscallClose = 8,
-	syscallUnlink = 9;
+        syscallExit = 1,
+        syscallExec = 2,
+        syscallJoin = 3,
+        syscallCreate = 4,
+        syscallOpen = 5,
+        syscallRead = 6,
+        syscallWrite = 7,
+        syscallClose = 8,
+        syscallUnlink = 9;
 
     /**
      * Handle a syscall exception. Called by <tt>handleException()</tt>. The
@@ -390,9 +441,25 @@ public class UserProcess {
     public int handleSyscall(int syscall, int a0, int a1, int a2, int a3) {
 	switch (syscall) {
 	case syscallHalt:
-	    return handleHalt();
-
-
+	    return handleHalt();//TO-DO: Add arguments to methods
+	case syscallExit:
+		return handleExit(a0);
+	case syscallJoin:
+		return handleJoin(a0,a1);
+	case syscallCreate:
+		return handleCreate(a0);
+	case syscallOpen:
+		return handleOpen(a0);
+	case syscallRead:
+		return handleRead(a0,a1,a2);
+	case syscallWrite:
+		return handleWrite(a0,a1,a2);
+	case syscallClose:
+		return handleClose(a0);
+	case syscallUnlink:
+		return handleUnlink(a0);
+	//readVirtualMemoryString() <---Translates v.m to physical
+		//ThreadedKernel.filesystem.open
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
 	    Lib.assertNotReached("Unknown system call!");
@@ -400,7 +467,8 @@ public class UserProcess {
 	return 0;
     }
 
-    /**
+
+	/**
      * Handle a user exception. Called by
      * <tt>UserKernel.exceptionHandler()</tt>. The
      * <i>cause</i> argument identifies which exception occurred; see the

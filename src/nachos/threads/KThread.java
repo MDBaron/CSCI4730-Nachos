@@ -1,6 +1,7 @@
 package nachos.threads;
 
 import nachos.machine.*;
+
 import java.util.List;
 import java.util.LinkedList;
 
@@ -413,11 +414,13 @@ public class KThread {
     return this.blockedThreads;
   }// getBlockedThreads
 
-    private static class PingTest implements Runnable {
+    @SuppressWarnings("unused")
+	private static class PingTest implements Runnable {
 	PingTest(int which) {
 	    this.which = which;
 	}
 	
+	@SuppressWarnings("static-access")
 	public void run() {
 	    for (int i=0; i<5; i++) {
 		System.out.println("*** thread " + which + " looped "

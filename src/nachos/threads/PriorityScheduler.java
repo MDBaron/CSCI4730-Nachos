@@ -3,9 +3,9 @@ package nachos.threads;
 import nachos.machine.*;
 
 import java.util.LinkedList;
-import java.util.TreeSet;
-import java.util.HashSet;
-import java.util.Iterator;
+//import java.util.TreeSet;
+//import java.util.HashSet;
+//import java.util.Iterator;
 
 /**
  * A scheduler that chooses threads based on their priorities.
@@ -425,7 +425,8 @@ public class PriorityScheduler extends Scheduler {
     
     KThread t1, t2, t3;
     final Lock lock;
-    final Condition2 condition;
+    @SuppressWarnings("unused")
+	final Condition2 condition;
     
     /*
      * Case 1: Tests priority scheduler without donation
@@ -777,7 +778,12 @@ public class PriorityScheduler extends Scheduler {
     {
       public void run()
       {
-	System.out.println(KThread.currentThread().getName() + " - p" + ((ThreadState) KThread.currentThread().schedulingState).getPriority());
+    	  ThreadState ts = (ThreadState) KThread.currentThread().schedulingState;
+    	  if(ts  != null){
+    		  System.out.println(KThread.currentThread().getName() + " - p" + (ts.getPriority()));
+    	  } else { 
+    		  System.out.println("Thread contains no schedule state.");
+    	  }//Null checking for ThreadState objects
       }// run
     }// speak
 
@@ -795,5 +801,7 @@ public class PriorityScheduler extends Scheduler {
     }// for
 
     selfTestRun(tList, pList);
+    
+    
   }// selfTest
 }//PriorityScheduler

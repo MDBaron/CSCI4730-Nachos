@@ -33,7 +33,7 @@ public final class Config {
 	    File file = new File(configFile);
 	    Reader reader = new FileReader(file);
 	    StreamTokenizer s = new StreamTokenizer(reader);
-
+	    
 	    s.resetSyntax();
 	    s.whitespaceChars(0x00, 0x20);
 	    s.wordChars(0x21, 0xFF);
