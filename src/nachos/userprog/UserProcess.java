@@ -5,6 +5,7 @@ import nachos.threads.*;
 import nachos.userprog.*;
 
 import java.io.EOFException;
+import java.util.HashMap;
 
 /**
  * Encapsulates the state of a user process that is not contained in its
@@ -23,6 +24,11 @@ public class UserProcess {
    * Allocate a new process.
    */
   public UserProcess() {
+    // set up fd mapper, default 0 and 1 to stdin and stdout
+    fdMap = new OpenFile[MAX_OPEN_FILES];
+    fdMap[0] = UserKernel.console.openForReading();
+    fdMap[1] = UserKernel.console.openForWriting();
+
     int numPhysPages = Machine.processor().getNumPhysPages();
     pageTable = new TranslationEntry[numPhysPages];
     for (int i=0; i<numPhysPages; i++)
@@ -345,56 +351,108 @@ public class UserProcess {
     Lib.assertNotReached("Machine.halt() did not halt machine!");
     return 0;
   }
-  
-  //TO-DO: Syscall handlers
 
   private int handleExit(int a0) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+    String argAddress = readVirtualMemoryString(a0, 256);
     
     // TODO Auto-generated method stub
     return 0;
   }//handleExit
   
   private int handleJoin(int a0, int a1) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
+    String argAddress = readVirtualMemoryString(a0, 256);
     // TODO Auto-generated method stub
     return 0;
   }//handleJoin
   
-  private int handleCreate(int a0) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
-    // TODO Auto-generated method stub
-    return 0;
+  private int handleCreate(int nameAddr) {
+    String fileName = readVirtualMemoryString(nameAddr, 256);
+
+    OpenFile createdFile = ThreadedKernel.fileSystem.open(fileName, true);
+    return fdMapPut(createdFile);
   }//handleCreate
   
-  private int handleOpen(int a0) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
-    // TODO Auto-generated method stub
-    return 0;
+  private int handleOpen(int nameAddr) {
+    String fileName = readVirtualMemoryString(nameAddr, 256);
+
+    OpenFile openedFile = ThreadedKernel.fileSystem.open(fileName, false);
+    return fdMapPut(openedFile);
   }//handleOpen
   
-  private int handleRead(int a0, int a1, int a2) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
-    // TODO Auto-generated method stub
-    return 0;
+  private int handleRead(int fd, int bufAddr, int count) {
+    if(fd < 0 || fd >= MAX_OPEN_FILES)
+    {
+      return -1;
+    }// if
+    
+    OpenFile fileToRead = fdMap[fd];
+    
+    if(fileToRead == null)
+    {
+      // given fd currently not in use
+      return -1;
+    }// if
+    
+    byte[] buffer = new byte[count];
+
+    int numBytesRead = fileToRead.read(buffer, 0, count);
+
+    if(numBytesRead < 0)
+    {
+      return numBytesRead;
+    }// if
+
+    writeVirtualMemory(bufAddr, buffer);
+    return numBytesRead;
   }//handleRead
   
-  private int handleWrite(int a0, int a1, int a2) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
-    // TODO Auto-generated method stub
-    return 0;
+  private int handleWrite(int fd, int bufAddr, int count) {
+    if(fd < 0 || fd >= MAX_OPEN_FILES)
+    {
+      return -1;
+    }// if
+
+    OpenFile fileToWrite = fdMap[fd];
+    
+    if(fileToWrite == null)
+    {
+      // given fd currently not in use
+      return -1;
+    }// if
+    
+    byte[] buffer = new byte[count];
+    readVirtualMemory(bufAddr, buffer);
+
+    int numBytesWritten = fileToWrite.write(buffer, 0, count);
+
+    return numBytesWritten;
   }//handleWrite
   
-  private int handleClose(int a0) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
-    // TODO Auto-generated method stub
+  private int handleClose(int fd) {
+    if(fd < 0 || fd >= MAX_OPEN_FILES)
+    {
+      return -1;
+    }// if
+
+    OpenFile fileToClose = fdMap[fd];
+    
+    if(fileToClose == null)
+    {
+      // given fd currently not in use
+      return -1;
+    }// if
+
+    fileToClose.close();
+    fdMap[fd] = null;
+
     return 0;
   }//handleClose
   
-  private int handleUnlink(int a0) {
-    String argAddress = readVirtualMemoryString(a0, 32);//2nd arg needs to be determined. 32 is a placeholder
-    // TODO Auto-generated method stub
-    return 0;
+  private int handleUnlink(int nameAddr) {
+    String fileName = readVirtualMemoryString(nameAddr, 256);
+
+    boolean removedSuccessfully = ThreadedKernel.fileSystem.remove(fileName);
+    return removedSuccessfully ? 0 : -1;
   }//handleUnlink
   
   
@@ -497,6 +555,25 @@ public class UserProcess {
       Lib.assertNotReached("Unexpected exception");
     }
   }
+
+  // puts the given file into an open slot in the file descriptor -> file object
+  // mapping.  returns the fd given to the file, or -1 if max fd capacity has been
+  // reached
+  private int fdMapPut(OpenFile fileToPut)
+  {
+    // iterate through hashmap to find an open slot
+    for(int i = 0; i < MAX_OPEN_FILES; i++)
+    {
+      // if this fd is unused, stick the file in this slot
+      if(fdMap[i] != null)
+      {
+	fdMap[i] = fileToPut;
+	return i;
+      }// if
+    }// for
+
+    return -1; // no open slots
+  }// fdMapPut
   
   /** The program being run by this process. */
   protected Coff coff;
@@ -514,4 +591,8 @@ public class UserProcess {
   
   private static final int pageSize = Processor.pageSize;
   private static final char dbgProcess = 'a';
+  private static final int MAX_OPEN_FILES = 16;
+
+  /** Mapping of file descriptor -> file object */
+  private OpenFile[] fdMap;
 }
