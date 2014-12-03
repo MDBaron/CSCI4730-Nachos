@@ -35,12 +35,23 @@ public class UserKernel extends ThreadedKernel {
     public void selfTest() {
 	super.selfTest();
 
+	// test creat, open, read, write, and close, along with using multiple file descriptors in one process
+	System.out.println("\ncp.coff: cat.c -> blah.c");
+	UserProcess proc1 = new UserProcess();
+	String[] args1 = new String[3];
+	args1[0] = "cp.coff";
+	args1[1] = "cat.c";
+	args1[2] = "blah.c";
+	proc1.execute("cp.coff", args1);
+	ThreadedKernel.alarm.waitUntil(100000);
 
-	UserProcess cat = new UserProcess();
-	String[] args = new String[2];
-	args[0] = "cat.coff";
-	args[1] = "cp.c";
-	cat.execute("cat.coff", args);
+	// test unlink
+	System.out.println("\nrm.coff: blah.c");
+	UserProcess proc2 = new UserProcess();
+	String[] args2 = new String[2];
+	args2[0] = "rm.coff";
+	args2[1] = "blah.c";
+	proc2.execute("rm.coff", args2);
 	ThreadedKernel.alarm.waitUntil(100000);
 	
 

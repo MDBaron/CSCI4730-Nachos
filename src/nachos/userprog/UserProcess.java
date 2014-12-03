@@ -561,11 +561,11 @@ public class UserProcess {
   // reached
   private int fdMapPut(OpenFile fileToPut)
   {
-    // iterate through hashmap to find an open slot
+    // iterate through array to find an open slot
     for(int i = 0; i < MAX_OPEN_FILES; i++)
     {
       // if this fd is unused, stick the file in this slot
-      if(fdMap[i] != null)
+      if(fdMap[i] == null)
       {
 	fdMap[i] = fileToPut;
 	return i;
