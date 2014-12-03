@@ -5,7 +5,6 @@ import nachos.threads.*;
 import nachos.userprog.*;
 
 import java.io.EOFException;
-import java.util.HashMap;
 
 /**
  * Encapsulates the state of a user process that is not contained in its
@@ -591,7 +590,8 @@ public class UserProcess {
   
   private static final int pageSize = Processor.pageSize;
   private static final char dbgProcess = 'a';
-  private static final int MAX_OPEN_FILES = 16;
+
+  public static final int MAX_OPEN_FILES = 16;
 
   /** Mapping of file descriptor -> file object */
   private OpenFile[] fdMap;
